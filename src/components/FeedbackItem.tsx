@@ -2,6 +2,7 @@ import React, { useContext } from 'react'
 import Card from './shared/Card'
 import { FaEdit, FaTimes } from 'react-icons/fa'
 import { FeedbackContext } from '../context/FeedbackContext'
+import { Feedback } from '../models/feedback'
 interface Props {
   feedbackItem: Feedback
 }
@@ -12,7 +13,7 @@ const FeedbackItem = ({ feedbackItem }: Props) => {
   const handleDeleteItem = () => {
     let isOk = window.confirm('Are you sure you want to delete this feedback?')
     if (isOk) {
-      deleteFeedback(feedbackItem.id)
+      deleteFeedback(feedbackItem)
     }
   }
 

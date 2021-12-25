@@ -1,5 +1,6 @@
-import { createContext, useState } from 'react'
-import FeedbackData from '../data/FeedbackData'
+import axios from 'axios'
+import { createContext, useEffect, useState } from 'react'
+import { Feedback } from '../models/feedback'
 
 interface Props {
   children: React.ReactNode
@@ -7,24 +8,26 @@ interface Props {
 
 interface ContextType {
   feedback: Feedback[]
-  deleteFeedback: (id: string) => void
+  deleteFeedback: (item: Feedback) => void
   addFeedback: (newFeedback: Feedback) => void
   editFeedback: (newFeedback: Feedback) => void
   feedbackEdit: { item: Feedback | null; edit: boolean }
-  updateFeedback: (id: string, updFeedback: Feedback) => void
+  updateFeedback: (updFeedback: Feedback) => void
+  isLoading: boolean
 }
 
 export const FeedbackContext = createContext<ContextType>({
   feedback: [],
-  deleteFeedback: (id: string) => {},
+  deleteFeedback: (item: Feedback) => {},
   addFeedback: (newFeedback: Feedback) => {},
   editFeedback: (newFeedback: Feedback) => {},
-  updateFeedback: (id: string, updFeedback: Feedback) => {},
+  updateFeedback: (updFeedback: Feedback) => {},
   feedbackEdit: { item: null, edit: false },
+  isLoading: true,
 })
 
 export const FeedbackProvider = ({ children }: Props) => {
-  const [feedback, setFeedback] = useState<Feedback[]>(FeedbackData)
+  const [feedback, setFeedback] = useState<Feedback[]>([])
   const [feedbackEdit, setFeedbackEdit] = useState<{
     item: Feedback | null
     edit: boolean
@@ -32,15 +35,39 @@ export const FeedbackProvider = ({ children }: Props) => {
     item: null,
     edit: false,
   })
+  const [isLoading, setIsLoading] = useState(true)
 
-  const deleteFeedback = (id: string) => {
-    setFeedback(() => {
-      return feedback.filter((feedback: Feedback) => feedback.id !== id)
-    })
+  useEffect(() => {
+    fetchFeedback()
+  }, [])
+
+  const fetchFeedback = async () => {
+    try {
+      const response = await axios.get(`/feedback?_sort=id&_order=desc`)
+      setFeedback(response.data)
+      setIsLoading(false)
+    } catch (error) {
+      console.log(error)
+    }
   }
 
-  const addFeedback = (newFeedback: Feedback) => {
-    setFeedback([newFeedback, ...feedback])
+  const deleteFeedback = async (item: Feedback) => {
+    try {
+      await axios.delete(`/feedback/${item.id}`)
+      setFeedback(() => {
+        return feedback.filter((feedback: Feedback) => feedback.id !== item.id)
+      })
+    } catch (error) {}
+  }
+
+  const addFeedback = async (newFeedback: Feedback) => {
+    console.log(newFeedback)
+    try {
+      let res = await axios.post('/feedback', newFeedback)
+      setFeedback([res.data, ...feedback])
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const editFeedback = (item: Feedback) => {
@@ -50,16 +77,21 @@ export const FeedbackProvider = ({ children }: Props) => {
     })
   }
 
-  const updateFeedback = (id: string, updItem: Feedback) => {
-    setFeedback(
-      feedback.map((item: Feedback) =>
-        item.id === id ? { ...item, ...updItem } : item
+  const updateFeedback = async (updItem: Feedback) => {
+    try {
+      await axios.put(`/feedback/${updItem.id}`, updItem)
+      setFeedback(
+        feedback.map((item: Feedback) =>
+          item.id === updItem.id ? { ...item, ...updItem } : item
+        )
       )
-    )
-    setFeedbackEdit({
-      item: null,
-      edit: false,
-    })
+      setFeedbackEdit({
+        item: null,
+        edit: false,
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
@@ -71,6 +103,7 @@ export const FeedbackProvider = ({ children }: Props) => {
         editFeedback,
         feedbackEdit,
         updateFeedback,
+        isLoading,
       }}
     >
       {children}

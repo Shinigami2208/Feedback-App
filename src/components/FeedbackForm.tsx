@@ -2,7 +2,6 @@ import React, { FormEvent, useContext, useEffect, useState } from 'react'
 import RatingSelect from './RatingSelect'
 import Button from './shared/Button'
 import Card from './shared/Card'
-import { v4 as uuidv4 } from 'uuid'
 import { FeedbackContext } from '../context/FeedbackContext'
 
 const FeedbackForm = () => {
@@ -42,9 +41,9 @@ const FeedbackForm = () => {
 
     if (feedbackEdit.edit && feedbackEdit.item) {
       const feedbackUpdated = { text, rating, id: feedbackEdit.item.id }
-      updateFeedback(feedbackUpdated.id, feedbackUpdated)
+      updateFeedback(feedbackUpdated)
     } else if (feedbackEdit.edit === false) {
-      const newFeebback = { text, rating, id: uuidv4() }
+      const newFeebback = { text, rating }
       addFeedback(newFeebback)
     }
     setText('')
